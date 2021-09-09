@@ -139,5 +139,6 @@ int main (int argc, char* argv[]) {
     }
 
     NtResumeProcess(hProc);
+    Closehandle(hProc);
     Sleep(3000);
 }
