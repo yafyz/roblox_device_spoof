@@ -11,7 +11,7 @@ typedef LONG (NTAPI *t_NtResumeProcess)(IN HANDLE ProcessHandle);
 t_NtSuspendProcess NtSuspendProcess;
 t_NtResumeProcess NtResumeProcess;
 
-HANDLE getRobloxHandle(int argc, char* argv[]) { // code in this function is gonna suck biggest balls cause aaaaaaaaaa
+HANDLE launchRoblox() { // code in this function is gonna suck biggest balls cause aaaaaaaaaa
     PROCESS_INFORMATION procInfo;
     STARTUPINFO startInfo;
 
@@ -82,7 +82,7 @@ int main (int argc, char* argv[]) {
     NtSuspendProcess = (t_NtSuspendProcess)GetProcAddress(GetModuleHandle("ntdll"), "NtSuspendProcess");
     NtResumeProcess = (t_NtResumeProcess)GetProcAddress(GetModuleHandle("ntdll"), "NtResumeProcess");
 
-    hProc = getRobloxHandle(argc, argv);
+    hProc = launchRoblox(argc, argv);
     printf("Handle: 0x%0x\n", (UINT)hProc);
 
     Sleep(1500);
