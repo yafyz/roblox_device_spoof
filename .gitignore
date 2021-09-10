@@ -1,4 +1,4 @@
-main.obj
-main.exe
+*.obj
+*.exe
+*.cmd
 a.c
-move.cmd

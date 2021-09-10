@@ -11,50 +11,14 @@ typedef LONG (NTAPI *t_NtResumeProcess)(IN HANDLE ProcessHandle);
 t_NtSuspendProcess NtSuspendProcess;
 t_NtResumeProcess NtResumeProcess;
 
-HANDLE launchRoblox() { // code in this function is gonna suck biggest balls cause aaaaaaaaaa
-    PROCESS_INFORMATION procInfo;
-    STARTUPINFO startInfo;
-
-    memset(&procInfo,0,sizeof(procInfo));
-    memset(&startInfo,0,sizeof(startInfo));
-
-    char lpRbxPath[FILENAME_MAX];
-    int offLastSlash = 0;
-
-    GetModuleFileName(NULL, lpRbxPath, FILENAME_MAX);
-    for (int i = 0; i < strlen(lpRbxPath); i++)
-        if (lpRbxPath[i] == '\\' || lpRbxPath[i] == '/')
-            offLastSlash = i;
-    lpRbxPath[offLastSlash+1] = 0;
-    sprintf(lpRbxPath, "%sogRobloxPlayerBeta.exe", lpRbxPath);
-
-    if (!CreateProcessA(lpRbxPath, GetCommandLineA(), NULL, NULL, FALSE, 0, NULL, NULL, &startInfo, &procInfo)) {
-        printf("CreateProcess failed (%d).\n", GetLastError());
-        getch();
-        exit(1);
-    }
-
-    CloseHandle(procInfo.hProcess);
-    CloseHandle(procInfo.hThread);
-
-    HANDLE hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, procInfo.dwProcessId);
-    if (hProc == NULL) {
-        printf("fucky wucky no proc handle\n");
-        getch();
-        exit(1);
-    }
-
-    return hProc;
-}
-
-uintptr_t getModuleBaseAddress(HANDLE hProc, char* mToFind) {
+uintptr_t getModuleBaseAddress(HANDLE hProc, const char* mToFind) {
     HMODULE hMods[1024];
     DWORD dwBytesNeeded;
     char lpModName[MAX_PATH];
 
     if (!EnumProcessModules(hProc, hMods, sizeof(hMods), &dwBytesNeeded)) {
         printf("epic EnumProcessModules fail\n");
-        getch();
+        getchar();
         exit(1);
     }
 
@@ -67,8 +31,7 @@ uintptr_t getModuleBaseAddress(HANDLE hProc, char* mToFind) {
     return (uintptr_t)NULL;
 }
 
-int main (int argc, char* argv[]) {
-    HANDLE hProc;
+void ConsoleSpoof(HANDLE hProc, const char* lpModuleName) {
     char lpBuff[15];
     uintptr_t baseAddr;
     uintptr_t currAddr;
@@ -76,19 +39,15 @@ int main (int argc, char* argv[]) {
     MEMORY_BASIC_INFORMATION mbi;
     BOOL didFind = FALSE;
 
+    NtSuspendProcess = (t_NtSuspendProcess)GetProcAddress(GetModuleHandleA("ntdll"), "NtSuspendProcess");
+    NtResumeProcess = (t_NtResumeProcess)GetProcAddress(GetModuleHandleA("ntdll"), "NtResumeProcess");
+
     memset(&mbi, 0, sizeof(MEMORY_BASIC_INFORMATION));
     memset(lpBuff, 0, sizeof(lpBuff));
-
-    NtSuspendProcess = (t_NtSuspendProcess)GetProcAddress(GetModuleHandle("ntdll"), "NtSuspendProcess");
-    NtResumeProcess = (t_NtResumeProcess)GetProcAddress(GetModuleHandle("ntdll"), "NtResumeProcess");
-
-    hProc = launchRoblox(argc, argv);
-    printf("Handle: 0x%0x\n", (UINT)hProc);
-
-    Sleep(1500);
     NtSuspendProcess(hProc);
 
-    baseAddr = getModuleBaseAddress(hProc, "ogRobloxPlayerBeta.exe");
+
+    baseAddr = getModuleBaseAddress(hProc, lpModuleName);
     currAddr = baseAddr;
     printf("Base Address: 0x%0x\n", currAddr);
 
@@ -139,6 +98,5 @@ int main (int argc, char* argv[]) {
     }
 
     NtResumeProcess(hProc);
-    Closehandle(hProc);
-    Sleep(3000);
+    CloseHandle(hProc);
 }
